@@ -11,7 +11,7 @@ It is theoretically possible to do all of this on Windows but I do not recommend
 - The `sudo` command prefix will execute an action as the root user, bypassing typical ‘permission denied’ problems. This may or may not be required depending on where you have decided to compile/install/make the various programs in this guide.
 - To copy a folder and all its contents use `sudo cp -p -f -r /path/to/source/* /path/to/dest`
 
-Created using Linux Mint Cinnamon 21.1 (64-bit). Adjustments may be needed for other linux distributions.
+Created using TuxedoOS3 (64-bit). Adjustments may be needed for other linux distributions.
 
 1. Get the eccodes tarball from https://confluence.ecmwf.int/display/ECC/Releases.
       - You’re after the most recent release’s tar
@@ -39,44 +39,14 @@ Created using Linux Mint Cinnamon 21.1 (64-bit). Adjustments may be needed for o
            - `sudo cmake -S /opt/libaec-v1.0.6 -D CMAKE_INSTALL_PREFIX=/opt/libaec`
       - Install: `sudo make install`
       - Clean up; delete both the source and binaries from the /opt folder using e.g. `sudo rm -r /opt/build`
-5. Insall the OpenJPG library: https://github.com/uclouvain/openjpeg. Note: this may or may not be necessary; I couldn’t figure out if cmake was actually using the openjpeg library I specified. 
-      - As with AEC, the method here uses cmake.
-      - On the github page, click on code -> download .zip
-      - Extract the archive inside the Downloads folder (this can either be done in the GUI or using e.g. unzip).
-      - Cd back to the /opt directory if you left it: 
-           - `cd /opt`
-      - Make and cd into a build directory:
-           - `sudo mkdir build`
-           - `cd build`
-      - Copy the openjpeg-master folder to the /opt folder
-           - `sudo cp -r ~/Downloads/openjpeg-master /opt/openjpeg-master
-      - Use cmake to make the build:
-           - `sudo cmake -S /opt/openjpeg-master -D CMAKE_INSTALL_PREFIX=/opt/openjpeg`
-      - Then install:
-            - `sudo make install`
-      - Clean up
-           - `sudo rm -r /opt/build`
-           - `sudo rm -r /opt/openjpeg-master`
-6. Install lipng
+5. Install lipng
       - On linux, this can be done with `sudo apt-get install libpng-dev`
       - Note the install directory returned by `whereis libpng`
-7. Install netcdf. 
+6. Install netcdf. 
       - `sudo apt-get install libnetcdf-dev`
-8. Install git.
+7. Install git.
       - `sudo apt-get install git`
-9. Install miniconda and numpy.
-      - Follow https://conda.io/projects/conda/en/stable/user-guide/install/linux.html.
-      - Download the latest .sh file for linux
-      - Open the terminal in the downloads folder
-           - `cd ~/Downloads`
-      - Run the .sh installer
-           - `bash Miniconda3-latest-Linux-x86_64.sh`
-      - Note that ‘latest’ refers to whatever version you downloaded. Make sure the actual file name matches what you downloaded.
-      - Follow the prompts.
-      - When miniconda is installed, run `conda list`. You should get a list of packages.
-      - Next, install numpy
-           - `conda install numpy`
-10. Install the eccodes library.
+8. Install the eccodes library.
       - Download the most recent tarball from https://confluence.ecmwf.int/display/ECC/Releases.
       - As before, unzip the file inside the Downloads directory
            - `cd ~/Downloads`
@@ -105,7 +75,7 @@ Created using Linux Mint Cinnamon 21.1 (64-bit). Adjustments may be needed for o
            - `sudo rm -r build`
            - `sudo rm -r eccodes-2.30-2-Source`
       - Eccodes should now be installed.
-11. Obtain the data2arl library from ARL and make the libhysplit.a library.
+9. Obtain the data2arl library from ARL and make the libhysplit.a library.
       - HYSPLIT data2arl distro from https://www.ready.noaa.gov/HYSPLIT_data2arl.php
       - Download the ‘https://www.ready.noaa.gov/data/web/models/hysplit4/decoders/hysplit_data2arl.zip’. I used the June 13, 2022 version.
       - This is also included as standard in recent HYSPLIT distributions (look for the ‘data2arl’ folder)
@@ -124,10 +94,10 @@ Created using Linux Mint Cinnamon 21.1 (64-bit). Adjustments may be needed for o
       - Save the Makefile
       - Make the libhysplit.a library: `sudo make`
       - This should create a file called libhysplit.a inside the library folder.
-12. Make the era52arl program.
+10. Make the era52arl program.
       - This requires modifying a pair of makefiles.
       - The first should be in the main hysplit_data2arl folder, called ‘Makefile.inc.gfortran’
-           - Various libraries are linked. Make sure the paths reflect real files on your system.
+           - Various libraries are linked. Make sure the paths reflect real files on your system. Uncomment the appropriate lines (I had to uncomment the eccodes lines)
       - Next, there’s the makefile inside the era52arl directory.
            - First, make sure the Makefile.inc.gfortran is included. 
            - To do this, change the line:
@@ -136,6 +106,7 @@ Created using Linux Mint Cinnamon 21.1 (64-bit). Adjustments may be needed for o
                - include /opt/hysplit_data2arl/Makefile.inc.gfortran
            - Make sure the previously compiled hysplit library is linked. Specify ‘LIBHYS’ at that line:
                - For me, LIBHYS = -L ../metprog/library -lhysplit
+           - I had to change the FCCOMPILE line to FCCOMPILE = $(FC) $(ECCODESINC) $(FCFLAGS) -I/opt/eccodes/include 
       - At this point you can attempt to compile the program by running `sudo make` inside the era52arl folder.
       - If it is successful, run `./era52arl` inside the era52arl folder without any arguments to test the program.
       - If you receive the following error, you can try adding symlinks to the eccodes libraries inside your usr/lib/ folder. 
@@ -144,4 +115,10 @@ Created using Linux Mint Cinnamon 21.1 (64-bit). Adjustments may be needed for o
            - `sudo ln -s /opt/eccodes/lib/libeccodes_f90.so /usr/lib/libeccodes_f90.so`
            - `sudo ln -s /opt/eccodes/lib/libeccodes.so /usr/lib/libeccodes.so`
 
-At this point, I was able to successfully run the era52arl program. 
+At this point, I was able to successfully run the era52arl program using the following commands:
+
+/opt/hysplit_data2arl/era52arl/era52arl -i./example.3dpl.grib -a./example.2dpl.all.grib
+
+
+
+
